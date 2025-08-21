@@ -139,26 +139,25 @@ import torch
 # Disable WandB
 os.environ["WANDB_DISABLED"] = "true"
 
-# ✅ Load the dataset
+# Load the dataset
 df = pd.read_json("fine_tune_data.jsonl", lines=True)
 dataset = Dataset.from_pandas(df)
 
-# Optional: Remove index column
 if "__index_level_0__" in dataset.column_names:
     dataset = dataset.remove_columns("__index_level_0__")
 
-# ✅ Format as instruction prompt
+# Format as instruction prompt
 def format_prompt(example):
     return f"വാക്യത്തിൽ തെളിയിക്കുന്ന വെറുപ്പിന് എതിരായ ഒരു മറുപടി എഴുതുക.\n\n{example['instruction']}\n\nമറുപടി: {example['response']}"
 
 dataset = dataset.map(lambda x: {"text": format_prompt(x)})
 
-# ✅ Load tokenizer and model
+# Load tokenizer and model
 model_name = "VinkuraAI/KunoRZN-Llama-3-3B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 model = AutoModelForCausalLM.from_pretrained(model_name, load_in_4bit=True, device_map="auto")
 
-# ✅ Tokenization with labels
+# Tokenization with labels
 def tokenize(example):
     result = tokenizer(
         example["text"],
@@ -171,7 +170,7 @@ def tokenize(example):
 
 tokenized_dataset = dataset.map(tokenize, batched=True)
 
-# ✅ Apply QLoRA configuration
+# Apply QLoRA configuration
 model = prepare_model_for_kbit_training(model)
 lora_config = LoraConfig(
     r=8,
@@ -183,7 +182,7 @@ lora_config = LoraConfig(
 )
 model = get_peft_model(model, lora_config)
 
-# ✅ Training arguments
+# Training arguments
 training_args = TrainingArguments(
     output_dir="kuno-finetuned",
     per_device_train_batch_size=2,
@@ -196,7 +195,7 @@ training_args = TrainingArguments(
     save_total_limit=2,
 )
 
-# ✅ Trainer setup
+# Trainer setup
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -204,13 +203,14 @@ trainer = Trainer(
     tokenizer=tokenizer
 )
 
-# ✅ Train!
+# Train!
 trainer.train()
 
-# ✅ Save fine-tuned model
+# Save fine-tuned model
 model.save_pretrained("kuno-finetuned")
 tokenizer.save_pretrained("kuno-finetuned")
 
+ch
 # ---- SSF-Based Counter-Speech Chatbot with KunoRZN-Llama-3-3B Generation ----
 
 # Required installations (uncomment in Colab)
@@ -337,9 +337,9 @@ def generate_counter_speech(hs_input):
 
 user_input = "അവർക്ക് വിവാഹം കഴിക്കാനുള്ള അവകാശമില്ല"
 response = generate_counter_speech(user_input)
-print(f"🤖: {response}")
+print(f" {response}")
 
-print(f"🤖: {response[1]}")
+print(f" {response[1]}")
 
 !pip install detoxify
 
